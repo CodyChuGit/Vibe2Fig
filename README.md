@@ -5,7 +5,7 @@ componentized, render-verified Figma file** — tokens, component sets,
 per-screen frames, and documentation pages — with the code as the only source
 of truth (no screenshot tracing). Works with any SwiftUI or React program.
 
-![Vibe2Fig pipeline — codebase → spec IR → Figma, with seeded simulators as the referee](docs/pipeline.png)
+![Vibe2Fig — your code becomes componentized Figma, and Figma edits become updated code](docs/pipeline.png)
 
 **The method in one sentence:** code supplies the numbers, a seeded running
 app (simulator for SwiftUI, browser for React) supplies the rendered truth,
