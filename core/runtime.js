@@ -216,6 +216,20 @@ async function build(spec, parent, STATE) {
   } else if (t === "button") {
     // PixelButtonStyle: panel (or tint if prominent) fill, tint/cream 2pt outer
     // stroke, dim 1pt inner line, label centered, minHeight 40 (24 small)
+    // Prefer a PixelButton instance when STATE carries the variant + props
+    const tintKey = (spec.tint || "text") + "/" + (spec.prominent ? "prominent" : "default") + "/" + ((spec.minH ?? 40) < 34 ? "28" : "40");
+    const variantId = STATE.components && STATE.components["PixelButton/" + tintKey];
+    if (variantId && STATE.componentProps && STATE.componentProps.PixelButton) {
+      const comp = await figma.getNodeByIdAsync(variantId);
+      node = comp.createInstance();
+      parent.appendChild(node);
+      const P = STATE.componentProps.PixelButton;
+      const props = {}; props[P.Label] = spec.label; props[P.Cursor] = !!spec.cursor;
+      node.setProperties(props);
+      if (spec.w) node.resize(spec.w, Math.max(spec.minH ?? 40, node.height));
+      if (spec.name) node.name = spec.name;
+      return node;
+    }
     const minH = spec.minH ?? 40;
     node = figma.createAutoLayout("HORIZONTAL");
     node.itemSpacing = 4;
@@ -286,11 +300,30 @@ async function run(SPEC, STATE) {
   if (SPEC.y !== undefined) frame.y = SPEC.y;
 
   const root = await build(SPEC.root, frame, STATE);
-  // screen roots default to filling the frame, centered
+  // Anchor-based auto-layout (owner direction 2026-07-30): the frame itself is
+  // auto-layout so centering is structural, not positional.
+  //   anchor "center"      -> true center (SwiftUI centeredMoment / full-bleed)
+  //   anchor "safe-center" -> centers below the 35pt clock inset
+  //   anchor "top"         -> top-anchored scroll content (pad from SPEC.pad, default 52)
   if (SPEC.rootLayout !== "manual") {
-    root.x = Math.round((frame.width - root.width) / 2);
-    root.y = SPEC.rootY !== undefined ? SPEC.rootY : Math.round((frame.height - root.height) / 2);
-    if (SPEC.dy) root.y += SPEC.dy; // measured safe-area correction (sim ground truth)
+    const anchor = SPEC.anchor || "center";
+    frame.layoutMode = "VERTICAL";
+    frame.primaryAxisSizingMode = "FIXED";
+    frame.counterAxisSizingMode = "FIXED";
+    frame.counterAxisAlignItems = "CENTER";
+    frame.primaryAxisAlignItems = anchor === "top" ? "MIN" : "CENTER";
+    frame.paddingTop = anchor === "safe-center" ? 35 : (anchor === "top" ? (SPEC.pad ?? 52) : 0);
+    frame.resize(SPEC.w || 208, SPEC.h || 248);
   }
+  // system clock (always-on watch clock, present in every simulator capture)
+  await figma.loadFontAsync({ family: "Inter", style: "Semi Bold" });
+  const clk = figma.createText();
+  clk.fontName = { family: "Inter", style: "Semi Bold" };
+  clk.fontSize = 20; clk.characters = "10:09"; clk.name = "system-clock";
+  clk.fills = [{ type: "SOLID", color: { r: 1, g: 1, b: 1 } }];
+  frame.appendChild(clk);
+  if (frame.layoutMode && frame.layoutMode !== "NONE") clk.layoutPositioning = "ABSOLUTE";
+  clk.x = 192 - clk.width; clk.y = 14;
+  clk.constraints = { horizontal: "MAX", vertical: "MIN" };
   return { frameId: frame.id, name: SPEC.name };
 }
