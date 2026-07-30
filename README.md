@@ -15,21 +15,49 @@ consistency, and a screenshot-verify loop closes every write. Full rationale:
 
 ## Install
 
-Requirements: Python 3 + Pillow (`pip install pillow`) and
-[Claude Code](https://claude.com/claude-code) with the Figma MCP server.
-For the verification loop: Xcode + simulators (SwiftUI projects) or a
-browser/dev server (React projects).
+One command — clones (or updates) the repo, installs dependencies, registers
+the Figma MCP server, and installs the agent skill:
 
 ```bash
-git clone https://github.com/CodyChuGit/Vibe2Fig.git
-cd Vibe2Fig
+curl -fsSL https://raw.githubusercontent.com/CodyChuGit/Vibe2Fig/main/install.sh | bash
+```
 
-# Figma MCP (once)
+Already cloned? Just run `./install.sh` — it's idempotent.
+
+### Dependencies
+
+Installed or checked by `install.sh`:
+
+| Dependency | Used for | Auto-installed? |
+|---|---|---|
+| Python 3 + [Pillow](https://pypi.org/project/pillow/) | capture, pixel measurement, asset prep | yes (`pip`) |
+| [Claude Code](https://claude.com/claude-code) | runs the agent + skill | no — install first |
+| Figma MCP server | all Figma reads/writes | yes (`claude mcp add`) |
+| Xcode + simulators | SwiftUI verification loop | no — macOS/App Store |
+| A browser / dev server | React verification loop | no |
+| UI/UX Pro Max skill | layout quality (recommended) | no — optional |
+
+### Agentic install
+
+Or let your agent do it — paste this into Claude Code:
+
+```text
+Install Vibe2Fig: run
+`curl -fsSL https://raw.githubusercontent.com/CodyChuGit/Vibe2Fig/main/install.sh | bash`,
+then verify the `vibe2fig` skill is available and the Figma MCP server is
+connected (add it with
+`claude mcp add --transport http figma https://mcp.figma.com/mcp` if not).
+If Pillow is missing, `pip install pillow`. Finish by telling me the repo
+path and confirming the skill triggers on "turn this app into a Figma file".
+```
+
+### Manual install
+
+```bash
+git clone https://github.com/CodyChuGit/Vibe2Fig.git && cd Vibe2Fig
+pip install pillow
 claude mcp add --transport http figma https://mcp.figma.com/mcp
-
-# install the agent skill (once) — symlink keeps it updated with the repo
-mkdir -p ~/.claude/skills
-ln -s "$(pwd)/vibe2fig_skill" ~/.claude/skills/vibe2fig
+mkdir -p ~/.claude/skills && ln -s "$(pwd)/vibe2fig_skill" ~/.claude/skills/vibe2fig
 ```
 
 ## Agentic usage (the skill)
