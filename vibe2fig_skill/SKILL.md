@@ -1,15 +1,25 @@
 ---
 name: vibe2fig
-description: Reverse-engineer a real codebase into a componentized, simulator-verified Figma file, or incrementally update one. Use when the user wants an app turned into Figma, a Figma clone kept in sync with code, new screens/sizes/assets added to an existing Vibe2Fig project, or code-truth audits of Figma content. Code supplies the numbers, seeded simulators supply rendered truth, the state.json ledger supplies memory.
+description: Bidirectional code ⇄ Figma sync for SwiftUI and React apps — reverse-engineer a codebase into a componentized, render-verified Figma file, keep it updated as code changes, and turn Figma edits back into source-anchored code patches. Use whenever the user wants an app turned into Figma, a Figma file kept in sync with code (either direction), new screens/sizes/assets/states added to an existing Vibe2Fig project, design-to-code or code-to-design work against a screen gallery, or code-truth audits of Figma content — even if they never say "Vibe2Fig" (phrases like "get my app into Figma", "make the Figma match the code", "sync my design edits into the app" all qualify). Code supplies the numbers, a seeded live render supplies truth, the state.json ledger supplies memory.
 ---
 
-# Vibe2Fig — code → Figma, verified
+# Vibe2Fig — code ⇄ Figma, verified
 
 Workflow with **phase gates**. Each phase ends with an artifact on disk and a
-verification step. First build runs 0→5; updates enter at Phase 5's diff.
-Repo: `~/code2figma` (github.com/CodyChuGit/Vibe2Fig). Read
-`docs/SKILL_ANALYSIS.md` for the rationale, `docs/GOTCHAS.md` before any
+verification step. First build runs 0→5; code-side updates enter at Phase 5's
+diff; Figma-side edits sync back through Phase 6.
+
+**Repo root**: this skill file lives inside the Vibe2Fig repo (it is usually
+symlinked into the agent skills dir) — resolve the symlink and treat the
+skill directory's parent as the repo root; every path below is repo-relative.
+Read `docs/SKILL_ANALYSIS.md` for the rationale, `docs/GOTCHAS.md` before any
 `use_figma` or simulator work.
+
+**Requirements**: the Figma MCP server (load the `figma-use` skill before any
+`use_figma` call — skipping it causes hard-to-debug failures), Python 3 +
+Pillow for `tools/`, and a live render source: Xcode simulators for SwiftUI,
+a browser/dev server for React (wherever "capture" appears below, React
+projects screenshot seeded routes in the browser instead).
 
 ## Hard rules (learned, non-negotiable)
 
@@ -90,8 +100,9 @@ organism/molecule masters and the extractor reads through instances. When the
 user asks to sync Figma edits into code, use `sync/` (see `sync/README.md`):
 1. `python3 sync/extract_chunk.py projects/<app>/state.json` → run the script
    via `use_figma` → save to `projects/<app>/sync/extracted/`.
-2. `python3 sync/spec_diff.py canonical/X.json extracted/X.json
-   --anchors anchors/X.json --md` → ops + change order.
+2. `python3 sync/spec_diff.py projects/<app>/sync/canonical/X.json
+   projects/<app>/sync/extracted/X.json --anchors projects/<app>/sync/anchors/X.json --md`
+   → ops + change order.
 3. Apply each op at its source anchor (smallest change; respect the app's own
    per-tier constants). No anchor → locate via the digest, then ADD the anchor.
 4. **Verify like Phase 4**: rebuild, seeded capture, measure — the op's value
