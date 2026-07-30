@@ -67,7 +67,11 @@ function applyCommon(node, spec, STATE) {
   if (spec.name) node.name = spec.name;
   if (spec.fill !== undefined) node.fills = [makePaint(spec.fill, STATE)];
   if (spec.opacity !== undefined) node.opacity = spec.opacity;
-  if (spec.radius !== undefined) node.cornerRadius = spec.radius;
+  if (spec.radius !== undefined) {
+    node.cornerRadius = spec.radius;
+    // SwiftUI RoundedRectangle(style: .continuous) — Apple squircle profile
+    if ("cornerSmoothing" in node) node.cornerSmoothing = 0.6;
+  }
   if (spec.rotation !== undefined) node.rotation = spec.rotation;
   if (spec.blur) node.effects = [{ type: "LAYER_BLUR", radius: spec.blur, visible: true }];
   if (spec.stroke) {
@@ -88,6 +92,7 @@ function addInnerStrokeOverlay(parent, s, STATE) {
   r.strokeWeight = s.weight ?? 1;
   r.strokeAlign = "INSIDE";
   r.cornerRadius = s.radius ?? 6;
+    if ("cornerSmoothing" in r) r.cornerSmoothing = 0.6;
   parent.appendChild(r);
   const inset = s.inset ?? 2;
   if ("layoutPositioning" in r && parent.layoutMode && parent.layoutMode !== "NONE") {
@@ -199,6 +204,7 @@ async function build(spec, parent, STATE) {
     node.paddingTop = pa[0]; node.paddingRight = pa[1]; node.paddingBottom = pa[2]; node.paddingLeft = pa[3];
     node.counterAxisAlignItems = "CENTER";
     node.cornerRadius = 8;
+    if ("cornerSmoothing" in node) node.cornerSmoothing = 0.6;
     node.fills = [makePaint(spec.fill || "panel", STATE)];
     node.strokes = [makePaint("border", STATE)];
     node.strokeWeight = 2;
@@ -216,6 +222,7 @@ async function build(spec, parent, STATE) {
     node.counterAxisAlignItems = "CENTER";
     node.primaryAxisAlignItems = "CENTER";
     node.cornerRadius = 8;
+    if ("cornerSmoothing" in node) node.cornerSmoothing = 0.6;
     const tint = spec.tint || "text";
     node.fills = [makePaint(spec.prominent ? tint : "panel", STATE)];
     node.strokes = [makePaint(spec.border || (spec.prominent ? tint : "border"), STATE)];
@@ -271,6 +278,7 @@ async function run(SPEC, STATE) {
   frame.name = SPEC.name;
   frame.resize(SPEC.w || 208, SPEC.h || 248);
   frame.cornerRadius = SPEC.cornerRadius ?? 52;
+  frame.cornerSmoothing = 0.6; // watch display corners are continuous, not circular
   frame.clipsContent = true;
   frame.fills = [makePaint(SPEC.bg || "bg", STATE)];
   figma.currentPage.appendChild(frame);
