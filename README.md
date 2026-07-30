@@ -31,24 +31,24 @@ Installed or checked by `install.sh`:
 | Dependency | Used for | Auto-installed? |
 |---|---|---|
 | Python 3 + [Pillow](https://pypi.org/project/pillow/) | capture, pixel measurement, asset prep | yes (`pip`) |
-| [Claude Code](https://claude.com/claude-code) | runs the agent + skill | no — install first |
-| Figma MCP server | all Figma reads/writes | yes (`claude mcp add`) |
+| A skills-capable coding agent | runs the workflow — any agent/model that loads `SKILL.md` files and speaks MCP | no — bring your own |
+| Figma MCP server (`https://mcp.figma.com/mcp`) | all Figma reads/writes | yes, when an agent CLI is detected |
 | Xcode + simulators | SwiftUI verification loop | no — macOS/App Store |
 | A browser / dev server | React verification loop | no |
 | UI/UX Pro Max skill | layout quality (recommended) | no — optional |
 
 ### Agentic install
 
-Or let your agent do it — paste this into Claude Code:
+Or let your agent do it — paste this into any coding agent:
 
 ```text
 Install Vibe2Fig: run
 `curl -fsSL https://raw.githubusercontent.com/CodyChuGit/Vibe2Fig/main/install.sh | bash`,
-then verify the `vibe2fig` skill is available and the Figma MCP server is
-connected (add it with
-`claude mcp add --transport http figma https://mcp.figma.com/mcp` if not).
-If Pillow is missing, `pip install pillow`. Finish by telling me the repo
-path and confirming the skill triggers on "turn this app into a Figma file".
+then verify the `vibe2fig` skill is loaded (SKILL.md in your skills
+directory) and the Figma MCP server (https://mcp.figma.com/mcp) is
+connected — register it in your MCP config if not. If Pillow is missing,
+`pip install pillow`. Finish by telling me the repo path and confirming the
+skill triggers on "turn this app into a Figma file".
 ```
 
 ### Manual install
@@ -56,14 +56,15 @@ path and confirming the skill triggers on "turn this app into a Figma file".
 ```bash
 git clone https://github.com/CodyChuGit/Vibe2Fig.git && cd Vibe2Fig
 pip install pillow
-claude mcp add --transport http figma https://mcp.figma.com/mcp
-mkdir -p ~/.claude/skills && ln -s "$(pwd)/vibe2fig_skill" ~/.claude/skills/vibe2fig
+# register the Figma MCP server (https://mcp.figma.com/mcp) with your agent,
+# then link the skill into your agent's skills directory, e.g.:
+ln -s "$(pwd)/vibe2fig_skill" <your-skills-dir>/vibe2fig
 ```
 
 ## Agentic usage (the skill)
 
 [`vibe2fig_skill/SKILL.md`](vibe2fig_skill/SKILL.md) turns the workflow into
-an invocable Claude Code skill with **phase gates**: Register → Ground truth →
+an invocable agent skill with **phase gates**: Register → Ground truth →
 Foundations → Pages → Verify → Ledger/Update. Once installed, prompts like
 
 - *"turn this app into a Figma file"* (first build, phases 0–5)
@@ -103,7 +104,7 @@ decisions when present, and falls back to its built-in page grammar when not.
 ## Layout
 
 ```
-vibe2fig_skill/  SKILL.md — the agentic workflow (symlink into ~/.claude/skills)
+vibe2fig_skill/  SKILL.md — the agentic workflow (link into your agent's skills dir)
 core/            runtime.js (Plugin-API interpreter), spec_schema.md,
                  upload.py, render_html.py, build_chunk.py
 adapters/        swiftui/ (extract_tokens.py, digest contract), react/ (plan)

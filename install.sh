@@ -32,27 +32,30 @@ else
   say "Pillow ok"
 fi
 
-# 3. Figma MCP server (needs the claude CLI)
+# 3. Figma MCP server — auto-register when a supported agent CLI is present
 if command -v claude >/dev/null 2>&1; then
   if claude mcp list 2>/dev/null | grep -qi figma; then
     say "Figma MCP already configured"
   else
-    say "adding Figma MCP server"
+    say "registering Figma MCP server with detected agent CLI"
     claude mcp add --transport http figma https://mcp.figma.com/mcp || \
-      say "WARN: could not add Figma MCP automatically — run: claude mcp add --transport http figma https://mcp.figma.com/mcp"
+      say "WARN: auto-registration failed — add https://mcp.figma.com/mcp to your agent's MCP config"
   fi
 else
-  say "WARN: claude CLI not found — install Claude Code, then run: claude mcp add --transport http figma https://mcp.figma.com/mcp"
+  say "NOTE: no agent CLI detected — register https://mcp.figma.com/mcp in your agent's MCP config"
 fi
 
-# 4. Install the agent skill (symlink tracks the repo)
-mkdir -p "$HOME/.claude/skills"
-if [ ! -e "$HOME/.claude/skills/vibe2fig" ]; then
-  ln -s "$DIR/vibe2fig_skill" "$HOME/.claude/skills/vibe2fig"
-  say "skill installed -> ~/.claude/skills/vibe2fig"
+# 4. Install the skill (symlink tracks the repo)
+# SKILL_DIR: your agent's skills directory; override for other agents, e.g.
+#   SKILL_DIR=~/.myagent/skills ./install.sh
+SKILL_DIR="${SKILL_DIR:-$HOME/.claude/skills}"
+mkdir -p "$SKILL_DIR"
+if [ ! -e "$SKILL_DIR/vibe2fig" ]; then
+  ln -s "$DIR/vibe2fig_skill" "$SKILL_DIR/vibe2fig"
+  say "skill installed -> $SKILL_DIR/vibe2fig"
 else
-  say "skill already installed"
+  say "skill already installed at $SKILL_DIR/vibe2fig"
 fi
 
-say "done. Open Claude Code and say: \"turn this app into a Figma file\""
+say "done. Ask your agent: \"turn this app into a Figma file\""
 say "optional: install the UI/UX Pro Max skill for layout quality (recommended)"
