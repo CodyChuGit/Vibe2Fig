@@ -46,6 +46,25 @@ function extractNode(n){
     const key=(mc && (MAPS.compsById[mc.id] ||
       (mc.parent && MAPS.compsById[mc.parent.id] && MAPS.compsById[mc.parent.id]+'/'+mc.name))) ||
       (mc && mc.name) || 'unknown';
+    const setName = mc && mc.parent && mc.parent.type==='COMPONENT_SET' ? mc.parent.name : (mc?mc.name:'');
+    if(/^Screen\//.test(setName) || /^Screen\//.test(n.name)){
+      // screen organism: transparent container — extract through so layout
+      // edits made on the master are visible to the differ
+      if(n.layoutMode && n.layoutMode!=='NONE'){
+        o=Object.assign({t:'stack', organism:key, dir:n.layoutMode==='VERTICAL'?'v':'h',
+          spacing:r1(n.itemSpacing)}, base(n));
+        if(n.primaryAxisAlignItems && n.primaryAxisAlignItems!=='MIN') o.justify=n.primaryAxisAlignItems.toLowerCase();
+        if(n.counterAxisAlignItems && n.counterAxisAlignItems!=='MIN') o.align=n.counterAxisAlignItems.toLowerCase();
+        o.children=n.children.map(extractNode);
+      } else {
+        o=Object.assign({t:'z', organism:key}, base(n));
+        if(n.clipsContent) o.clip=true;
+        o.children=n.children.map(c=>{
+          const e=extractNode(c); e.abs={x:r1(c.x), y:r1(c.y)}; return e;
+        });
+      }
+      return o;
+    }
     o=Object.assign({t:'instance', comp:key}, base(n));
     const texts=n.findAll(k=>k.type==='TEXT');
     if(texts.length){ o.text={}; for(const t of texts) o.text[t.name]=t.characters; }

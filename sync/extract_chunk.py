@@ -41,20 +41,26 @@ def build_maps(state):
 
 def main():
     state_path = sys.argv[1]
-    section = "PRODUCTION SCREENS"
-    if "--section" in sys.argv:
-        section = sys.argv[sys.argv.index("--section") + 1]
+    only = None
+    if "--frames" in sys.argv:  # comma list of frame names to extract
+        only = sys.argv[sys.argv.index("--frames") + 1]
     state = json.load(open(state_path))
     maps = build_maps(state)
     lib = (HERE / "figma_to_spec.js").read_text()
-    page = state.get("pages", {}).get("productionScreens", "")
+    surface = state.get("syncSurface", {})
+    page = surface.get("page") or state.get("pages", {}).get("screens", "")
+    flt = (f"const ONLY = new Set({json.dumps([n.strip() for n in only.split(',')])});\n"
+           if only else "const ONLY = null;\n")
     driver = f"""
-// ---- driver ----
+// ---- driver: the canonical screen gallery IS the sync surface ----
 const page = {f"await figma.getNodeByIdAsync('{page}')" if page else "figma.currentPage"};
 await figma.setCurrentPageAsync(page);
-const sec = page.children.find(n=>n.type==='SECTION' && n.name.toUpperCase().includes({json.dumps(section)}));
-if(!sec) throw new Error('no section named {section} on page '+page.name);
-const frames = sec.children.filter(n=>n.type==='FRAME');
+{flt}const frames = [];
+for(const sec of page.children.filter(n=>n.type==='SECTION')){{
+  for(const f of sec.children.filter(c=>c.type==='FRAME')){{
+    if(!ONLY || ONLY.has(f.name)) frames.push(f);
+  }}
+}}
 return frames.map(extractFrame);
 """
     print(f"const MAPS = {json.dumps(maps)};\n{lib}\n{driver}")

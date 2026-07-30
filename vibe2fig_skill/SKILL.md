@@ -84,9 +84,10 @@ After any `upload_assets`, sweep **every page** for auto-placed stray frames —
 they land on whatever page the user has open.
 
 ## Phase 6 — Sync (Figma → code, v2)
-The **PRODUCTION SCREENS** section is the editable sync surface (detached
-roots, molecule instances intact). When the user asks to sync Figma edits into
-code — or to set the surface up — use `sync/` (see `sync/README.md`):
+**The canonical screen gallery page IS the sync surface** — every frame a pure
+`Screen/*` organism instance + system chrome; layout edits happen on the
+organism/molecule masters and the extractor reads through instances. When the
+user asks to sync Figma edits into code, use `sync/` (see `sync/README.md`):
 1. `python3 sync/extract_chunk.py projects/<app>/state.json` → run the script
    via `use_figma` → save to `projects/<app>/sync/extracted/`.
 2. `python3 sync/spec_diff.py canonical/X.json extracted/X.json

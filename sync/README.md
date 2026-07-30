@@ -1,10 +1,13 @@
 # sync/ — v2: Figma → code
 
-The reverse direction. A designated **PRODUCTION SCREENS** section in the
-Figma file is the sync surface: editable frames (detached roots, molecule
-instances intact) whose extracted spec is diffed against a canonical snapshot;
-the diff becomes a source-anchored change order the agent applies to code,
-then verifies against a live render.
+The reverse direction. **The canonical screen gallery page itself is the sync
+surface** — no separate "production" page. Every frame there is a pure
+`Screen/*` organism instance (+ system chrome), so layout edits happen on the
+organism and molecule **masters** and propagate everywhere; the extractor
+reads *through* instances (organism-transparent) into the full layout tree.
+The extracted spec is diffed against a canonical snapshot; the diff becomes a
+source-anchored change order the agent applies to code, then verifies against
+a live render.
 
 Proven round trip (SwiftUI pilot): a 4 pt HUD nudge in Figma → change order →
 one-line code patch → rebuild → seeded-simulator capture measured the shift at
