@@ -9,7 +9,9 @@ then verifies against a live render.
 Proven round trip (SwiftUI pilot): a 4 pt HUD nudge in Figma → change order →
 one-line code patch → rebuild → seeded-simulator capture measured the shift at
 **exactly** +4.0 pt → code reverted → frame restored from canonical → clean
-fixpoint (0 diff ops).
+fixpoint (0 diff ops). The pilot surface carries the app's **entire screen
+inventory** (21 frames, every screen family), each with a canonical snapshot
+and a source-anchor map.
 
 ## Tools
 
