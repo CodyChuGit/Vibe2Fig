@@ -40,3 +40,6 @@ GeometryReader math, and a list of state variants worth separate frames.
 Conditionals are pinned to a representative default and annotated. Fonts are
 annotated as `px(raw) -> rendered pt + family` so both raw and rendered values
 survive review.
+
+## System clock
+Every screen frame gets a "system-clock" text node (Inter Semi Bold 20pt, right edge x=192, y=14) appended by the runtime driver — matches the always-on watch clock in every simulator capture.
