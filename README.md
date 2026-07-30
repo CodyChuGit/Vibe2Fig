@@ -117,10 +117,11 @@ projects/        your apps (git-ignored) — ledger, specs, captures. See
 
 ## v2 — Figma → code (implemented)
 
-The **Production Screens** page is the sync surface: an editable section of
-frames that round-trips. Edit a frame and `sync/` turns the delta into a
-source-anchored change order; change the code and the same frames are rebuilt
-to match. See [sync/README.md](sync/README.md).
+**The canonical screen gallery is the sync surface** — every frame a pure
+screen-organism instance, so edits happen on component masters and propagate
+everywhere. Edit the design and `sync/` turns the delta into a source-anchored
+change order; change the code and the same frames are rebuilt to match. See
+[sync/README.md](sync/README.md).
 
 ```
 extract (figma_to_spec.js) → diff vs canonical (spec_diff.py, ±0.5 pt)
@@ -136,8 +137,9 @@ reverse pass restored the frame from code to a zero-op fixpoint.
 
 - **v1 (done)**: SwiftUI → Figma, render-verified, incremental updates via
   the ledger.
-- **v2 (done)**: Figma → code via the Production Screens sync surface —
-  extract → diff → source-anchored change order → verified patch.
+- **v2 (done)**: Figma → code via the screen-gallery sync surface —
+  organism-transparent extract → diff → source-anchored change order →
+  verified patch.
 - **v1.5 (next)**: React adapter to parity — tokens from Tailwind/CSS vars,
   digests from JSX, browser captures as ground truth; same spec IR, runtime,
   and sync engine.
