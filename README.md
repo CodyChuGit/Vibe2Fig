@@ -3,9 +3,7 @@
 Reverse-engineer a **SwiftUI or React** codebase into an **editable,
 componentized, render-verified Figma file** — tokens, component sets,
 per-screen frames, and documentation pages — with the code as the only source
-of truth (no screenshot tracing). Proven end-to-end on a shipped SwiftUI app:
-7 pages, 111+ component masters, 45 screen states, 5 device sizes, every
-exhibit placed from measured ground truth.
+of truth (no screenshot tracing). Works with any SwiftUI or React program.
 
 ![Vibe2Fig pipeline — codebase → spec IR → Figma, with seeded simulators as the referee](docs/pipeline.png)
 

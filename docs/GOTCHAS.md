@@ -35,11 +35,11 @@ Read before any `use_figma` or simulator work. Every entry cost real time.
 - Fonts: load before *any* text mutation (`getStyledTextSegments(['fontName'])`
   for existing text). "Inter Semi Bold", not "SemiBold".
 
-## watchOS / iOS simulators
+## Apple simulators (iOS / watchOS / tvOS)
 
-- **Find the save path in the persistence code** — never assume. (the app
-  writes `Library/Application Support/game_state.json`, not `Documents/`;
-  seeding the wrong dir fails silently and the app resumes its old save.)
+- **Find the save path in the persistence code** — never assume. (Apps
+  commonly write `Library/Application Support/…`, not `Documents/`; seeding
+  the wrong dir fails silently and the app resumes its old save.)
 - **Permission prompts block fresh sims** (e.g. location). `simctl privacy
   <udid> grant <service> <bundleId>` does not dismiss an already-showing
   prompt — grant, then **shutdown + boot**, then relaunch.

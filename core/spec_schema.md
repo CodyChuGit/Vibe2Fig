@@ -1,7 +1,8 @@
 # Spec IR schema
 
 A screen spec is `{ name, w, h, cornerRadius?, bg?, x?, y?, rootY?, root }`.
-Defaults: 208×248, cornerRadius 52 (46mm watch), bg token `bg`, root centered.
+Defaults come from the project config (`projects/<app>/config.json`): device
+viewport `w`×`h`, `cornerRadius`, bg token `bg`, root centered.
 
 Node types (interpreted by `core/runtime.js`):
 
@@ -14,16 +15,16 @@ Node types (interpreted by `core/runtime.js`):
 | `img` | image fill rect | `asset` key from state.assets, `w`, `h`, `scale` FILL/FIT, `opacity` |
 | `spacer` | layoutGrow filler | — |
 | `instance` | component instance | `comp` key from state.components, `overrides` {textNodeName: chars}, `w`/`h` |
-| `panel` | PixelPanel pattern | `pad`, `spacing`, `dir`, `children` (panel fill + cream outer + dim inner strokes) |
-| `button` | PixelButtonStyle pattern | `label`, `tint`, `prominent`, `minH`, `w`, `cursor` (▶ glyph), `border` |
-| `bar` | PixelBar pattern | `tint`, `filled`, `segments`, `segW` |
+| `panel` | project panel chrome | `pad`, `spacing`, `dir`, `children` (fill + outer/inner stroke pattern per project) |
+| `button` | project button style | `label`, `tint`, `prominent`, `minH`, `w`, `cursor` (selection glyph), `border` |
+| `bar` | segmented meter | `tint`, `filled`, `segments`, `segW` |
 
 Color spec: token name (bound to a Figma variable), `{token, opacity}`, or
 `{rgb:[r,g,b], opacity}` for system colors the token set doesn't cover
-(.secondary = white@0.6; watch dark palette red #FF453A green #30D158
+(.secondary = white@0.6; Apple dark system palette red #FF453A green #30D158
 cyan #64D2FF yellow #FFD60A indigo #5E5CE6 purple #BF5AF2 mint #66D4CF).
 
-Sprite idiom (SwiftUI `SpriteAnimationView(size:S)` — outer S×S box, art
+Sprite idiom (an animated-sprite view of box size S — outer S×S box, art
 bottom-aligned at S×naturalScale):
 
 ```json
@@ -41,5 +42,7 @@ Conditionals are pinned to a representative default and annotated. Fonts are
 annotated as `px(raw) -> rendered pt + family` so both raw and rendered values
 survive review.
 
-## System clock
-Every screen frame gets a "system-clock" text node (Inter Semi Bold 20pt, right edge x=192, y=14) appended by the runtime driver — matches the always-on watch clock in every simulator capture.
+## System chrome
+If the project config's `grammar` defines system chrome (e.g. a status clock:
+font, size, anchor), the runtime driver appends it to every screen frame so
+exhibits match what the device or browser actually renders in captures.

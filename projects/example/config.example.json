@@ -1,21 +1,21 @@
 {
-  "platform": "watchos",
+  "platform": "ios | watchos | web",
   "fileKey": "YOUR_FIGMA_FILE_KEY",
   "bundleId": "com.example.MyApp",
-  "savePath": "Library/Application Support/game_state.json",
-  "seeder": "swift run seeder <dir> <mode>   (modes: onboard, battle, ...)",
+  "savePath": "Library/Application Support/state.json",
+  "seeder": "command that writes a deterministic app state (modes: home, detail, ...)",
   "permissions": ["location"],
   "devices": {
-    "40": {"pt": [162, 197], "radius": 28,
-           "deviceType": "com.apple.CoreSimulator.SimDeviceType.Apple-Watch-SE-3-40mm",
-           "runtime": "com.apple.CoreSimulator.SimRuntime.watchOS-26-5",
-           "udid": ""},
-    "46": {"pt": [208, 248], "radius": 52,
-           "deviceType": "com.apple.CoreSimulator.SimDeviceType.Apple-Watch-Series-11-46mm",
-           "runtime": "com.apple.CoreSimulator.SimRuntime.watchOS-26-5",
-           "udid": ""}
+    "phone": {"pt": [393, 852], "radius": 55,
+              "deviceType": "com.apple.CoreSimulator.SimDeviceType.iPhone-16",
+              "runtime": "com.apple.CoreSimulator.SimRuntime.iOS-26-0",
+              "udid": ""},
+    "phone-max": {"pt": [440, 956], "radius": 55,
+                  "deviceType": "com.apple.CoreSimulator.SimDeviceType.iPhone-16-Pro-Max",
+                  "runtime": "com.apple.CoreSimulator.SimRuntime.iOS-26-0",
+                  "udid": ""}
   },
   "grammar": {
-    "clock": "Inter Semi Bold 20pt, right edge at W-16, y=14"
+    "systemChrome": "optional — e.g. status clock font/size/anchor, appended to every screen frame"
   }
 }
