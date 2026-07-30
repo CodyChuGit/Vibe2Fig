@@ -7,15 +7,7 @@ screenshot tracing). Proven end-to-end on a shipped watchOS app: 7 pages,
 111+ component masters, 45 screen states, 5 device sizes, every exhibit
 placed from measured simulator ground truth.
 
-```
-┌─────────────┐   adapter    ┌──────────────┐   generator   ┌────────────┐
-│  codebase    │ ──────────▶ │  spec IR      │ ────────────▶ │  Figma file │
-│ SwiftUI/React│              │ tokens.json   │  runtime.js   │ vars/comps/ │
-│              │ ◀────────── │ digests/*.yaml│ ◀──────────── │ frames      │
-└─────────────┘  sync (v2)   │ specs/*.json  │  screenshots  └────────────┘
-        ▲                     └──────────────┘        │
-        └── seeded simulators + tools/measure.py ─────┘   (the referee)
-```
+![Vibe2Fig pipeline — codebase → spec IR → Figma, with seeded simulators as the referee](docs/pipeline.png)
 
 **The method in one sentence:** code supplies the numbers, seeded simulators
 supply the rendered truth, the `state.json` ledger supplies the memory,
