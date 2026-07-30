@@ -82,3 +82,19 @@ tables, new screens/sizes) against the ledger → build only the delta →
 classify new content from the code's own tables → verify → ledger → commit.
 After any `upload_assets`, sweep **every page** for auto-placed stray frames —
 they land on whatever page the user has open.
+
+## Phase 6 — Sync (Figma → code, v2)
+The **PRODUCTION SCREENS** section is the editable sync surface (detached
+roots, molecule instances intact). When the user asks to sync Figma edits into
+code — or to set the surface up — use `sync/` (see `sync/README.md`):
+1. `python3 sync/extract_chunk.py projects/<app>/state.json` → run the script
+   via `use_figma` → save to `projects/<app>/sync/extracted/`.
+2. `python3 sync/spec_diff.py canonical/X.json extracted/X.json
+   --anchors anchors/X.json --md` → ops + change order.
+3. Apply each op at its source anchor (smallest change; respect the app's own
+   per-tier constants). No anchor → locate via the digest, then ADD the anchor.
+4. **Verify like Phase 4**: rebuild, seeded capture, measure — the op's value
+   must appear in pixels before it counts. Then update the canonical snapshot.
+5. Code changed first instead? Rebuild the frame from code (v1 update), then
+   re-snapshot. The canonical snapshot is the arbitration point — never edit
+   it by hand. Surface code-vs-locked-docs conflicts to the user.

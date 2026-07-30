@@ -108,21 +108,39 @@ vibe2fig_skill/  SKILL.md — the agentic workflow (link into your agent's skill
 core/            runtime.js (Plugin-API interpreter), spec_schema.md,
                  upload.py, render_html.py, build_chunk.py
 adapters/        swiftui/ (extract_tokens.py, digest contract), react/ (plan)
+sync/            v2 engine: figma_to_spec.js, extract_chunk.py, spec_diff.py
 tools/           capture.py (seeded-sim harness), measure.py (px→pt)
 docs/            SKILL_ANALYSIS.md (why this works), GOTCHAS.md (trap list)
 projects/        your apps (git-ignored) — ledger, specs, captures. See
                  projects/README.md and projects/example/.
 ```
 
+## v2 — Figma → code (implemented)
+
+The **Production Screens** page is the sync surface: an editable section of
+frames that round-trips. Edit a frame and `sync/` turns the delta into a
+source-anchored change order; change the code and the same frames are rebuilt
+to match. See [sync/README.md](sync/README.md).
+
+```
+extract (figma_to_spec.js) → diff vs canonical (spec_diff.py, ±0.5 pt)
+  → change order with source anchors → agent patches the code
+  → rebuild + seeded capture + measure → pixels confirm → re-snapshot
+```
+
+Proven on the SwiftUI pilot: a 4 pt HUD nudge in Figma became a one-line code
+patch whose rebuilt render measured the shift at **exactly +4.0 pt**, then the
+reverse pass restored the frame from code to a zero-op fixpoint.
+
 ## Roadmap
 
-- **v1 (now)**: SwiftUI → Figma proven end-to-end; render-verified,
-  incremental updates via the ledger.
-- **v1.5**: React adapter to parity — tokens from Tailwind/CSS vars, digests
-  from JSX, browser captures as ground truth; same spec IR and runtime.
-- **v2**: Figma → code sync — diff `get_metadata` against specs, map nodes to
-  source via Code Connect anchors, emit minimal source patches. The ledger +
-  measured geometry make the diff tractable.
+- **v1 (done)**: SwiftUI → Figma, render-verified, incremental updates via
+  the ledger.
+- **v2 (done)**: Figma → code via the Production Screens sync surface —
+  extract → diff → source-anchored change order → verified patch.
+- **v1.5 (next)**: React adapter to parity — tokens from Tailwind/CSS vars,
+  digests from JSX, browser captures as ground truth; same spec IR, runtime,
+  and sync engine.
 
 ## License
 

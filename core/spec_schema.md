@@ -46,3 +46,11 @@ survive review.
 If the project config's `grammar` defines system chrome (e.g. a status clock:
 font, size, anchor), the runtime driver appends it to every screen frame so
 exhibits match what the device or browser actually renders in captures.
+
+## Sync dialect (v2)
+`sync/figma_to_spec.js` extracts frames back into this IR with two deltas:
+text nodes carry `pt` (rendered size — both diff sides come from the same
+extractor, so no raw-size reverse map is needed) and `instance` nodes carry a
+`text` map of their current text overrides. Canonical snapshots live in
+`projects/<app>/sync/canonical/`; node-path → source-location maps in
+`projects/<app>/sync/anchors/`.
