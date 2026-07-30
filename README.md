@@ -1,24 +1,26 @@
 # Vibe2Fig
 
-Reverse-engineer a real codebase into an **editable, componentized,
-simulator-verified Figma file** — tokens, component sets, per-screen frames,
-and documentation pages — with the code as the only source of truth (no
-screenshot tracing). Proven end-to-end on a shipped watchOS app: 7 pages,
-111+ component masters, 45 screen states, 5 device sizes, every exhibit
-placed from measured simulator ground truth.
+Reverse-engineer a **SwiftUI or React** codebase into an **editable,
+componentized, render-verified Figma file** — tokens, component sets,
+per-screen frames, and documentation pages — with the code as the only source
+of truth (no screenshot tracing). Proven end-to-end on a shipped SwiftUI app:
+7 pages, 111+ component masters, 45 screen states, 5 device sizes, every
+exhibit placed from measured ground truth.
 
 ![Vibe2Fig pipeline — codebase → spec IR → Figma, with seeded simulators as the referee](docs/pipeline.png)
 
-**The method in one sentence:** code supplies the numbers, seeded simulators
-supply the rendered truth, the `state.json` ledger supplies the memory,
-component sets supply the consistency, and a screenshot-verify loop closes
-every write. Full rationale: [docs/SKILL_ANALYSIS.md](docs/SKILL_ANALYSIS.md).
+**The method in one sentence:** code supplies the numbers, a seeded running
+app (simulator for SwiftUI, browser for React) supplies the rendered truth,
+the `state.json` ledger supplies the memory, component sets supply the
+consistency, and a screenshot-verify loop closes every write. Full rationale:
+[docs/SKILL_ANALYSIS.md](docs/SKILL_ANALYSIS.md).
 
 ## Install
 
-Requirements: macOS (Xcode + simulators for the verification loop),
-Python 3 + Pillow (`pip install pillow`), and
+Requirements: Python 3 + Pillow (`pip install pillow`) and
 [Claude Code](https://claude.com/claude-code) with the Figma MCP server.
+For the verification loop: Xcode + simulators (SwiftUI projects) or a
+browser/dev server (React projects).
 
 ```bash
 git clone https://github.com/CodyChuGit/Vibe2Fig.git
@@ -54,12 +56,15 @@ Figma Plugin API, simulators, and pixel measurement.
 1. `cp projects/example/config.example.json projects/<app>/config.json` and
    fill it in (bundle id, **save path read from the persistence code**,
    device table).
-2. Extract tokens: `python3 adapters/swiftui/extract_tokens.py …`
+2. Extract tokens — SwiftUI: `python3 adapters/swiftui/extract_tokens.py …`;
+   React: tokens from Tailwind config / CSS variables (see
+   `adapters/react/README.md`).
 3. Write layout digests per [core/spec_schema.md](core/spec_schema.md)
    (LLM pass over source — reviewable, diffable YAML).
-4. Ground truth: seed a deterministic save, then
-   `python3 tools/capture.py --config projects/<app>/config.json --app <.app> --seed <save> --state home --out projects/<app>/captures/`
-   and `python3 tools/measure.py projects/<app>/captures/*.png`.
+4. Ground truth: seed a deterministic app state, then capture it —
+   SwiftUI: `python3 tools/capture.py --config projects/<app>/config.json --app <.app> --seed <save> --state home --out projects/<app>/captures/`;
+   React: screenshot the seeded routes in a browser at the target viewports.
+   Either way, finish with `python3 tools/measure.py projects/<app>/captures/*.png`.
 5. Let the skill build foundations → pages, verifying each section against
    the captures, and persist everything to `projects/<app>/state.json`.
 
@@ -78,10 +83,10 @@ projects/        your apps (git-ignored) — ledger, specs, captures. See
 
 ## Roadmap
 
-- **v1 (now)**: SwiftUI → Figma, simulator-verified, incremental updates via
-  the ledger.
-- **v1.5**: React adapter — tokens from Tailwind/CSS vars, digests from JSX,
-  same spec IR and runtime.
+- **v1 (now)**: SwiftUI → Figma proven end-to-end; render-verified,
+  incremental updates via the ledger.
+- **v1.5**: React adapter to parity — tokens from Tailwind/CSS vars, digests
+  from JSX, browser captures as ground truth; same spec IR and runtime.
 - **v2**: Figma → code sync — diff `get_metadata` against specs, map nodes to
   source via Code Connect anchors, emit minimal source patches. The ledger +
   measured geometry make the diff tractable.
