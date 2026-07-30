@@ -290,6 +290,7 @@ async function run(SPEC, STATE) {
   if (SPEC.rootLayout !== "manual") {
     root.x = Math.round((frame.width - root.width) / 2);
     root.y = SPEC.rootY !== undefined ? SPEC.rootY : Math.round((frame.height - root.height) / 2);
+    if (SPEC.dy) root.y += SPEC.dy; // measured safe-area correction (sim ground truth)
   }
   return { frameId: frame.id, name: SPEC.name };
 }
