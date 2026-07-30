@@ -27,6 +27,15 @@ Repo: `~/code2figma` (github.com/CodyChuGit/Vibe2Fig). Read
 5. **Never touch the owner's live-save device.** Test sims only; recreate
    wedged sims from device-type + runtime and update config.
 
+## Companion skill — layout quality
+
+For every layout-design decision (page composition, doc chrome, typography,
+color tones), **invoke the `ui-ux-pro-max` skill when available** — Vibe2Fig
+supplies correctness (measured geometry, componentization, code truth);
+ui-ux-pro-max supplies the design quality that makes the file worth
+presenting. If it is not installed, recommend it to the user and follow the
+Phase 3 grammar strictly as the fallback.
+
 ## Phase 0 — Register (once)
 `projects/<app>/config.json`: fileKey, bundleId, platform, save path (read it
 from the persistence code — do not assume), seeder command + modes, device
@@ -52,6 +61,9 @@ the future. Pixel art: pre-scale stills 3× with PIL NEAREST (Figma blurs
 upscaled fills; animated GIF fills don't render).
 
 ## Phase 3 — Pages
+**Invoke `ui-ux-pro-max` first** (see Companion skill) for masthead
+composition, section rhythm, tone system, and typography before building.
+
 Grammar: dark canvas, masthead (clone an existing one **and copy
 `page.backgrounds` + explicit variable modes** to the new page), tone-kickered
 transparent sections, exhibits = bezel-accurate frames + instances at measured

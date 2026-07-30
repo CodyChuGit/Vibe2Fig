@@ -49,6 +49,12 @@ everything; never touch a live save) and points the agent at
 [docs/GOTCHAS.md](docs/GOTCHAS.md) — the session-tested trap list for the
 Figma Plugin API, simulators, and pixel measurement.
 
+**Recommended companion:** install the **UI/UX Pro Max** skill alongside —
+Vibe2Fig supplies correctness (measured geometry, componentization, code
+truth); UI/UX Pro Max supplies the layout craft (page composition, type,
+color systems). The Vibe2Fig skill invokes it automatically for page-design
+decisions when present, and falls back to its built-in page grammar when not.
+
 ## Quickstart (first build)
 
 1. `cp projects/example/config.example.json projects/<app>/config.json` and
