@@ -1,1 +1,5 @@
-projects/*/build/urls.json
+.DS_Store
+__pycache__/
+projects/*
+!projects/README.md
+!projects/example/

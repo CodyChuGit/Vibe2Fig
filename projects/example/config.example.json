@@ -1,0 +1,21 @@
+{
+  "platform": "watchos",
+  "fileKey": "YOUR_FIGMA_FILE_KEY",
+  "bundleId": "com.example.MyApp",
+  "savePath": "Library/Application Support/game_state.json",
+  "seeder": "swift run seeder <dir> <mode>   (modes: onboard, battle, ...)",
+  "permissions": ["location"],
+  "devices": {
+    "40": {"pt": [162, 197], "radius": 28,
+           "deviceType": "com.apple.CoreSimulator.SimDeviceType.Apple-Watch-SE-3-40mm",
+           "runtime": "com.apple.CoreSimulator.SimRuntime.watchOS-26-5",
+           "udid": ""},
+    "46": {"pt": [208, 248], "radius": 52,
+           "deviceType": "com.apple.CoreSimulator.SimDeviceType.Apple-Watch-Series-11-46mm",
+           "runtime": "com.apple.CoreSimulator.SimRuntime.watchOS-26-5",
+           "udid": ""}
+  },
+  "grammar": {
+    "clock": "Inter Semi Bold 20pt, right edge at W-16, y=14"
+  }
+}

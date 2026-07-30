@@ -1,77 +1,99 @@
-# code2figma
+# Vibe2Fig
 
-Reverse-engineer a real codebase into an **editable, componentized Figma file** —
-tokens, components, and per-screen frames — with the code as the only source of
-truth (no screenshot tracing). End goal: a bidirectional toolkit where Figma
-edits flow back into the codebase.
+Reverse-engineer a real codebase into an **editable, componentized,
+simulator-verified Figma file** — tokens, component sets, per-screen frames,
+and documentation pages — with the code as the only source of truth (no
+screenshot tracing). Proven end-to-end on a shipped watchOS app: 7 pages,
+111+ component masters, 45 screen states, 5 device sizes, every exhibit
+placed from measured simulator ground truth.
 
 ```
 ┌─────────────┐   adapter    ┌──────────────┐   generator   ┌────────────┐
 │  codebase    │ ──────────▶ │  spec IR      │ ────────────▶ │  Figma file │
 │ SwiftUI/React│              │ tokens.json   │  runtime.js   │ vars/comps/ │
 │              │ ◀────────── │ digests/*.yaml│ ◀──────────── │ frames      │
-└─────────────┘  sync (v2)   │ specs/*.json  │  get_metadata └────────────┘
-                              └──────────────┘
+└─────────────┘  sync (v2)   │ specs/*.json  │  screenshots  └────────────┘
+        ▲                     └──────────────┘        │
+        └── seeded simulators + tools/measure.py ─────┘   (the referee)
 ```
 
-## Pipeline (v1 — code → Figma)
+**The method in one sentence:** code supplies the numbers, seeded simulators
+supply the rendered truth, the `state.json` ledger supplies the memory,
+component sets supply the consistency, and a screenshot-verify loop closes
+every write. Full rationale: [docs/SKILL_ANALYSIS.md](docs/SKILL_ANALYSIS.md).
 
-1. **Adapter** (`adapters/<framework>/`) extracts the design system from source:
-   - `extract_tokens.py` regex-parses color/radius/typography constants into
-     `tokens.json` (re-runnable; code changes flow through).
-   - **Layout digests** (`projects/<app>/digests/*.yaml`): per-screen layout
-     trees resolved for a concrete viewport (fonts bumped, GeometryReader math
-     evaluated, conditionals pinned to representative states). Produced by an
-     LLM reading the source — this is deliberate: real-world SwiftUI/JSX layout
-     is Turing-complete, so a static parser can't fully resolve it; an LLM pass
-     with the digest contract (see `core/spec_schema.md`) can, and the output
-     is reviewable + diffable.
-2. **Spec IR** (`projects/<app>/specs/*.json`): declarative node trees
-   (stack/z/text/img/instance/button/bar/panel…) referencing tokens by name and
-   assets by key. This is the exchange format both directions share.
-3. **Generator** (`core/runtime.js`): a Figma Plugin-API interpreter injected
-   into each `use_figma` MCP call. It builds auto-layout frames with
-   variable-bound fills, the exact font mapping, and component instances.
-   `core/upload.py` pushes binary assets (sprites/icons) and records
-   `imageHash`es.
-4. **Error-correcting loop**: after every frame, `node.screenshot()` /
-   `get_screenshot` output is compared against the digest; discrepancies are
-   fixed with targeted scripts before moving on. State (variable/component/
-   frame IDs) is persisted in `projects/<app>/state.json` so runs are
-   resumable and idempotent.
+## Install
+
+Requirements: macOS (Xcode + simulators for the verification loop),
+Python 3 + Pillow (`pip install pillow`), and
+[Claude Code](https://claude.com/claude-code) with the Figma MCP server.
+
+```bash
+git clone https://github.com/CodyChuGit/Vibe2Fig.git
+cd Vibe2Fig
+
+# Figma MCP (once)
+claude mcp add --transport http figma https://mcp.figma.com/mcp
+
+# install the agent skill (once) — symlink keeps it updated with the repo
+mkdir -p ~/.claude/skills
+ln -s "$(pwd)/vibe2fig_skill" ~/.claude/skills/vibe2fig
+```
+
+## Agentic usage (the skill)
+
+[`vibe2fig_skill/SKILL.md`](vibe2fig_skill/SKILL.md) turns the workflow into
+an invocable Claude Code skill with **phase gates**: Register → Ground truth →
+Foundations → Pages → Verify → Ledger/Update. Once installed, prompts like
+
+- *"turn this app into a Figma file"* (first build, phases 0–5)
+- *"add the new screens to the Figma"* / *"update the assets"* (update mode —
+  diffs code against the ledger, builds only the delta)
+- *"show the app at all device sizes in Figma"*
+
+trigger it. The skill enforces the five hard rules (derive from code / place
+from pixels; nothing raw on an exhibit; screenshot every write batch; ledger
+everything; never touch a live save) and points the agent at
+[docs/GOTCHAS.md](docs/GOTCHAS.md) — the session-tested trap list for the
+Figma Plugin API, simulators, and pixel measurement.
+
+## Quickstart (first build)
+
+1. `cp projects/example/config.example.json projects/<app>/config.json` and
+   fill it in (bundle id, **save path read from the persistence code**,
+   device table).
+2. Extract tokens: `python3 adapters/swiftui/extract_tokens.py …`
+3. Write layout digests per [core/spec_schema.md](core/spec_schema.md)
+   (LLM pass over source — reviewable, diffable YAML).
+4. Ground truth: seed a deterministic save, then
+   `python3 tools/capture.py --config projects/<app>/config.json --app <.app> --seed <save> --state home --out projects/<app>/captures/`
+   and `python3 tools/measure.py projects/<app>/captures/*.png`.
+5. Let the skill build foundations → pages, verifying each section against
+   the captures, and persist everything to `projects/<app>/state.json`.
 
 ## Layout
 
 ```
-core/       runtime.js (Plugin-API interpreter), upload.py, spec_schema.md
-adapters/   swiftui/ (extract_tokens.py, digest contract), react/ (plan)
-sync/       Figma → code roadmap (v2)
-projects/   one dir per app: tokens, digests, specs, asset_manifest, state.json
+vibe2fig_skill/  SKILL.md — the agentic workflow (symlink into ~/.claude/skills)
+core/            runtime.js (Plugin-API interpreter), spec_schema.md,
+                 upload.py, render_html.py, build_chunk.py
+adapters/        swiftui/ (extract_tokens.py, digest contract), react/ (plan)
+tools/           capture.py (seeded-sim harness), measure.py (px→pt)
+docs/            SKILL_ANALYSIS.md (why this works), GOTCHAS.md (trap list)
+projects/        your apps (git-ignored) — ledger, specs, captures. See
+                 projects/README.md and projects/example/.
 ```
-
-## Requirements
-
-- Figma MCP server (`claude mcp add --transport http figma https://mcp.figma.com/mcp`)
-- The app's asset files on disk (uploaded via `upload_assets` MCP + `core/upload.py`)
-
-## Prior art / leverage (as of early 2026)
-
-- **Figma official MCP** — `use_figma` (Plugin API execution), `upload_assets`,
-  `generate_figma_design` (live-web capture; covers running React apps),
-  `get_design_context` + **Code Connect** (design→code direction + node↔component mapping).
-- **Tokens Studio / style-dictionary** — token sync formats worth adopting for
-  `tokens.json` interop.
-- **react-figma** — renders React components into Figma; candidate backend for
-  the React adapter's component pass.
-- **story.to.design / html.to.design** — commercial capture of rendered HTML;
-  validation baseline, not editable-first like this pipeline.
 
 ## Roadmap
 
-- **v1 (this repo)**: SwiftUI adapter proven on `projects/pilot_app`
-  (watchOS, 25+ frames, 10 component sets, 27 bound variables).
-- **v1.5**: React adapter (see `adapters/react/README.md`) — tokens from
-  Tailwind/CSS vars, digests from JSX, same spec IR and runtime.
-- **v2**: Figma → code sync (see `sync/README.md`) — diff `get_metadata`
-  against specs, map nodes to source via Code Connect anchors, emit minimal
-  source patches.
+- **v1 (now)**: SwiftUI → Figma, simulator-verified, incremental updates via
+  the ledger.
+- **v1.5**: React adapter — tokens from Tailwind/CSS vars, digests from JSX,
+  same spec IR and runtime.
+- **v2**: Figma → code sync — diff `get_metadata` against specs, map nodes to
+  source via Code Connect anchors, emit minimal source patches. The ledger +
+  measured geometry make the diff tractable.
+
+## License
+
+MIT — see [LICENSE](LICENSE).
