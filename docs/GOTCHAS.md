@@ -49,7 +49,7 @@ Read before any `use_figma` or simulator work. Every entry cost real time.
 - First boot of a fresh sim is slow — `simctl bootstatus` before installing;
   a screenshot during boot returns the spinner, not your app.
 - Deterministic seeds: generate the save **once** on the host (driving the
-  real game-state code), copy the identical file to every sim — captures stay
+  real app-state code), copy the identical file to every sim — captures stay
   comparable across sizes.
 - Never touch the owner's live-save simulator; test devices only.
 
@@ -65,8 +65,8 @@ Read before any `use_figma` or simulator work. Every entry cost real time.
 - A bbox spanning two visual elements is contamination, not data — tighten
   the band (e.g. `[barTop-16, barTop-1]` for the label above a bar).
 - Natural sprite scale comes from the **trimmed animated GIF**, not the still
-  canvas (a trimmed sprite ≈ 0.75, not 0.5). Back it out from a verified frame:
-  `art / box`.
+  canvas (a trimmed frame can measure ≈0.75 of the box where the still reads
+  0.5). Back it out from a verified frame: `art / box`.
 
 ## Process
 
@@ -74,4 +74,5 @@ Read before any `use_figma` or simulator work. Every entry cost real time.
   of a word triggers `=cmd` expansion — quote it.
 - Verify visually after every write batch; API success ≠ visual success.
 - When measured reality contradicts locked project docs, **report it, don't
-  edit the locked doc** (e.g. 44 mm battles compact; doc says 40/41/42).
+  edit the locked doc** (e.g. a device the docs list in the large tier actually
+  renders the compact layout).

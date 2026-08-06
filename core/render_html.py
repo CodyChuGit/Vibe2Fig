@@ -76,7 +76,7 @@ class Renderer:
         path = self.asset_files[spec["asset"]]
         op = f"opacity:{spec['opacity']};" if "opacity" in spec else ""
         if spec.get("tint"):
-            # template-image tinting (PixelIconView): CSS mask + tint background
+            # template-image tinting (SwiftUI .renderingMode(.template)): CSS mask + tint background
             c = self.css_color(spec["tint"])
             return (f'<div style="width:{spec["w"]}px;height:{spec["h"]}px;background:{c};'
                     f'-webkit-mask:url({path}) center/contain no-repeat;'
@@ -109,10 +109,13 @@ class Renderer:
         return f'<div style="display:flex;gap:1.5px;">{cells}</div>'
 
     def instance(self, spec):
+        # ponytail: these templates are the pilot app's component vocabulary.
+        # A project with different components edits/extends this dispatch —
+        # names and copy come from the spec's overrides, not from here.
         comp = spec["comp"]
         o = spec.get("overrides", {})
         w = spec.get("w")
-        if comp.startswith("FoodRow"):
+        if comp.startswith("ItemRow"):
             hl = "highlighted" in comp
             stroke = self.css_color("cursor" if hl else "border")
             name_c = self.css_color("cursor" if hl else "text")
@@ -120,10 +123,10 @@ class Renderer:
                     f'padding:5px;background:{self.css_color("panel")};border:2px solid {stroke};'
                     f'border-radius:8px;box-sizing:border-box;justify-content:space-between;">'
                     f'<div style="display:flex;align-items:center;gap:6px;">'
-                    f'<img src="{self.asset_files["item_icon"]}" style="width:24px;height:24px;object-fit:contain;image-rendering:pixelated;">'
+                    f'<img src="{self.asset_files[o.get("icon", "item_icon")]}" style="width:24px;height:24px;object-fit:contain;image-rendering:pixelated;">'
                     f'<div style="display:flex;flex-direction:column;gap:1px;align-items:flex-start;">'
                     f'<span style="font-family:\'Jersey 15\';font-size:17px;color:{name_c};">{o.get("name","Item")}</span>'
-                    f'<span style="font-family:\'Jersey 15\';font-size:14px;color:{self.css_color("textDim")};">{o.get("effect","HP+8")}</span>'
+                    f'<span style="font-family:\'Jersey 15\';font-size:14px;color:{self.css_color("textDim")};">{o.get("effect","")}</span>'
                     f'</div></div>'
                     f'<span style="font-family:\'Jersey 15\';font-size:15px;color:{self.css_color("cursor")};">{o.get("count","×1")}</span></div>')
         if comp.startswith("ToggleRow"):
@@ -138,8 +141,8 @@ class Renderer:
                     f'<div style="position:absolute;top:2px;left:{knob_x}px;width:16px;height:16px;border-radius:8px;background:#fff;"></div>'
                     f'</div></div>')
         if comp.startswith("StatBar"):
-            icon = comp.split("/")[1]
-            tint = {"health": "hp", "pp": "pp", "adventure": "adventure"}[icon]
+            icon = comp.split("/")[1]              # StatBar/<icon>; token name = icon name
+            tint = o.get("tint", {"health": "hp"}.get(icon, icon))
             filled = int(o.get("filled", 9))
             return (f'<div style="display:flex;align-items:center;gap:4px;">'
                     f'<img src="{self.asset_files["icon_" + icon]}" style="width:10px;height:10px;'
@@ -149,24 +152,24 @@ class Renderer:
             tint = comp.split("/")[1]
             filled = int(o.get("filled", 7))
             return self.bar(tint, filled, 10, 5.05)
-        if comp.startswith("RunChip"):
+        if comp.startswith("Chip"):
             sel = comp.endswith("selected")
             stroke = f'2.5px solid {self.css_color("cursor")}' if sel else f'1px solid {self.css_color("border")}'
             color = self.css_color("cursor" if sel else "textDim")
             return (f'<div style="display:inline-block;padding:5px 8px;background:{self.css_color({"token":"panel","opacity":0.85})};'
                     f'border:{stroke};border-radius:5px;box-sizing:border-box;">'
-                    f'<span style="font-family:\'Jersey 15\';font-size:14px;color:{color};">RUN</span></div>')
-        if comp.startswith("MoveTile"):
+                    f'<span style="font-family:\'Jersey 15\';font-size:14px;color:{color};">{o.get("label","")}</span></div>')
+        if comp.startswith("ActionTile"):
             sel = comp.endswith("selected")
             unaff = comp.endswith("unaffordable")
-            fill = self.css_color(spec.get("fill", "type_electric"))
+            fill = self.css_color(spec.get("fill", "panel"))
             stroke = f'2.5px solid {self.css_color("cursor")}' if sel else "1.5px solid rgba(255,255,255,0.35)"
             op = "opacity:0.35;" if unaff else ""
             return (f'<div style="width:{w or 81.5}px;height:26px;display:flex;flex-direction:column;'
                     f'align-items:center;justify-content:center;background:{fill};border:{stroke};'
                     f'border-radius:5px;box-sizing:border-box;{op}line-height:0.85;">'
-                    f'<span style="font-family:\'Jersey 15\';font-size:15px;color:#fff;">{o.get("name","ACTION")}</span>'
-                    f'<span style="font-family:\'Jersey 15\';font-size:12px;color:rgba(255,255,255,0.75);">{o.get("power","40")}</span></div>')
+                    f'<span style="font-family:\'Jersey 15\';font-size:15px;color:#fff;">{o.get("name","")}</span>'
+                    f'<span style="font-family:\'Jersey 15\';font-size:12px;color:rgba(255,255,255,0.75);">{o.get("cost","")}</span></div>')
         if comp == "DialogPanel":
             return (f'<div style="position:relative;width:{w or 184}px;padding:8px;background:{self.css_color("panel")};'
                     f'border:2px solid {self.css_color("border")};border-radius:8px;box-sizing:border-box;">'

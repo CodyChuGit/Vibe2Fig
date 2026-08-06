@@ -1,14 +1,14 @@
-# Vibe2Fig — Skill Analysis: reproducing the PilotApp outcome
+# Vibe2Fig — Skill Analysis: reproducing the pilot outcome
 
-*Written 2026-07-30, immediately after the PilotApp build reached its
-"portfolio-grade" state. This is the postmortem that turns a one-off great
+*Written 2026-07-30, immediately after the pilot build (a watchOS SwiftUI
+app) reached its "portfolio-grade" state. This is the postmortem that turns a one-off great
 session into a repeatable skill.*
 
 ---
 
 ## 1. What the outcome actually was
 
-The PilotApp Figma file ended as:
+The pilot Figma file ended as:
 
 - **7 pages** with a consistent editorial grammar (Cover, Foundations &
   Components, Screens, User Flow, Doc Kit, Asset Library, Screen Sizes).
@@ -19,11 +19,11 @@ The PilotApp Figma file ended as:
 - **45 screen states**, every screen a composition of component instances —
   zero raw rectangles on exhibit frames.
 - **Five watch sizes** rendered from *measured* simulator ground truth, not
-  scaled artwork — including a spec discovery (44 mm battles in the compact
+  scaled artwork — including a spec discovery (a device rendering the compact
   tier) that the project's own locked docs had missed.
-- **A live-updatable asset library**: when the game gained 22 wild species and
-  4 berries, the update was a 20-minute mechanical diff, not a rebuild.
-- Copy that matches game-code logic exactly, then rewritten in designer voice.
+- **A live-updatable asset library**: when the app's content tables gained 26
+  new entries, the update was a 20-minute mechanical diff, not a rebuild.
+- Copy that matches app-code logic exactly, then rewritten in designer voice.
 
 The quality came from a *loop*, not from any single generation step. That loop
 is what the skill has to encode.
@@ -31,9 +31,9 @@ is what the skill has to encode.
 ## 2. The six load-bearing practices (with evidence)
 
 ### 2.1 Code is the gold standard — but the simulator is the referee
-Every number traced to source (`WatchMetrics.swift`, `Database.swift`,
-docs/21, docs/27), yet source alone was never trusted for *rendered* geometry.
-The winning pattern:
+Every number traced to source (the app's metrics, content-database, and
+screen-dimension files), yet source alone was never trusted for *rendered*
+geometry. The winning pattern:
 
 > constants from code → build → **seeded simulator capture** → **programmatic
 > pixel measurement** → build *from the measurements* → verify again.
@@ -41,21 +41,22 @@ The winning pattern:
 Evidence: the five-size page. Deriving ring padding from code produced wrong
 positions (SwiftUI's SPACE_BETWEEN/padding interplay); measuring icon cluster
 centers from screenshots produced exact ones. The measurement pass also caught
-a real spec error in the repo's locked docs (44 mm = compact battle tier).
+a real spec error in the repo's locked docs (a device sitting in the compact
+tier, not the large one).
 **Rule: derive from code, place from pixels, annotate the difference.**
 
 ### 2.2 Seeded saves make ground truth cheap
 `swift run seeder <dir> <mode>` produced identical save files for every
-simulator, so all five sizes showed the *same* game state and screenshots were
+simulator, so all five sizes showed the *same* app state and screenshots were
 directly comparable. Without deterministic saves, per-size captures would have
 been apples-to-oranges. The seeder is ~30 lines because it drives the real
-`GameStore` — the skill should demand a seeder per project, not screenshots of
-whatever state the app happens to be in.
+app store/state object — the skill should demand a seeder per project, not
+screenshots of whatever state the app happens to be in.
 
 ### 2.3 The ledger (`state.json`) is the skill's memory
 Every page, section, component, variant, variable, prop key, and asset hash is
-recorded. This is what made "update the assets with new items and total
-entries" a *diff* operation: manifest ∪ Database vs ledger → 26 new assets →
+recorded. This is what made "update the assets with the new content entries"
+a *diff* operation: manifest ∪ content tables vs ledger → 26 new assets →
 targeted patch. No re-inventory, no re-reading the whole file. A session
 without the ledger re-pays discovery cost every time; a session with it is
 incremental forever.
@@ -128,9 +129,9 @@ the new UDIDs back.
 
 ### Phase 1 — Ground truth
 1. Run token extractor + write/refresh digests (LLM pass, per contract).
-2. Generate seeds for the canonical states (idle hub, primary flow, combat/
-   detail states).
-3. `tools/capture.py --sizes all --states home,battle` → boots/creates sims,
+2. Generate seeds for the canonical states (idle hub, primary flow, detail
+   states).
+3. `tools/capture.py --sizes all --states <state list>` → boots/creates sims,
    installs, injects save at `savePath`, grants `permissions`, launches,
    screenshots. (This session's exact bash flow, made idempotent.)
 4. `tools/measure.py captures/ --out measurements.json` — band/bbox/color-

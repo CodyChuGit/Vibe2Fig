@@ -1,0 +1,20 @@
+{
+  "paletteFile": "DesignSystem.swift",
+  "typographyFile": "Typography.swift",
+  "literalColors": {"bg": [0.0, 0.0, 0.0]},
+  "scalars": ["radius", "radiusSmall"],
+  "caseColorFunc": "categoryColor",
+  "fontFilePattern": "static let (\\w+)\\s*=\\s*\"([\\w-]+)\"",
+  "screenSource": "docs/screen_dimensions.md (target row)",
+  "screen": {"width": 208, "height": 248, "cornerRadius": 52, "device": "<target device>"},
+  "bumpRule": "size<11 -> 12; size<12 -> 13; size<28 -> size+2; else size",
+  "fontBands": [
+    {"maxBumped": 20, "figmaFamily": "<family>", "note": "if the app bundles a font Figma lacks, use the fallback the app's own code declares"},
+    {"maxBumped": 28, "figmaFamily": "<family>"},
+    {"maxBumped": 9999, "figmaFamily": "<family>"}
+  ],
+  "components": {
+    "panel": {"padding": 8, "fill": "panel", "outerStroke": {"color": "border", "weight": 2}},
+    "button": {"minHeight": 40, "fontSize": 14}
+  }
+}

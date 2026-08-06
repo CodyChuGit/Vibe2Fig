@@ -89,7 +89,10 @@ decisions when present, and falls back to its built-in page grammar when not.
 1. `cp projects/example/config.example.json projects/<app>/config.json` and
    fill it in (bundle id, **save path read from the persistence code**,
    device table).
-2. Extract tokens — SwiftUI: `python3 adapters/swiftui/extract_tokens.py …`;
+2. Extract tokens — SwiftUI: copy
+   `adapters/swiftui/tokens.profile.example.json`, point it at your design-system
+   and typography files, then
+   `python3 adapters/swiftui/extract_tokens.py <app_src> <profile.json> projects/<app>/tokens.json`;
    React: tokens from Tailwind config / CSS variables (see
    `adapters/react/README.md`).
 3. Write layout digests per [core/spec_schema.md](core/spec_schema.md)

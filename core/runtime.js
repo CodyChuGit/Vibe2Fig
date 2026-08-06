@@ -6,11 +6,12 @@
 //          components: {name: componentId}, styles: {px: styleId} }
 // SPEC:  { name, w, h, root } — node tree, see node types in build().
 //
-// Font mapping mirrors AppSources/Typography.swift exactly:
+// Font mapping mirrors the app's own typography source exactly (example below
+// is the pixel-font band table produced by adapters/swiftui/extract_tokens.py):
 // bumped(raw): <11→12, <12→13, <28→raw+2, else raw. Family by bumped size:
-// <20 → a bundled pixel font (unavailable in Figma; its declared fallback Jersey 15
-// is used), <28 → Jersey 20, ≥28 → Jersey 25. (Jersey 10 is unreachable: the
-// bump floor is 12 and the <12 band never fires.)
+// <20 → Jersey 15, <28 → Jersey 20, ≥28 → Jersey 25. When the app bundles a
+// font Figma cannot install, use the fallback family the app's own code
+// declares. (Jersey 10 is unreachable here: the bump floor is 12.)
 
 function bumped(raw) {
   if (raw < 11) return 12;

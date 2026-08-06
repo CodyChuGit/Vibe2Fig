@@ -1,24 +1,21 @@
 #!/usr/bin/env python3
-"""Extract design tokens from Swift source into build/tokens.json.
+"""Extract design tokens from Swift source into tokens.json.
 
-Code is the source of truth: this parses the actual constants out of
-PixelKit.swift (app palette, radii, type colors, component metrics) and
-Typography.swift (font family names), so a re-run picks up code changes.
-The Typography band logic (bumped sizes -> family) is mirrored here with a
-pointer back to the source; it changes rarely and regex-parsing a Swift
-switch adds nothing but fragility.
+Code is the source of truth: this parses the actual constants out of the app's
+design-system file (color statics, radii, semantic color switches) and its
+typography file (font family names), so a re-run picks up code changes.
 
-Usage: python3 extract_tokens.py            # writes build/tokens.json
+The bits a parser cannot know — which files to read, the target screen, and the
+font band table (size -> Figma family, after the app's own size transform) —
+come from a profile JSON. Copy `tokens.profile.example.json` and fill it in.
+
+Usage: extract_tokens.py <app_src_dir> <profile.json> [out.json]
 """
 
 import json
 import re
 import sys
 from pathlib import Path
-
-REPO = Path(__file__).resolve().parents[2]
-APP = REPO / "AppSources"
-OUT = Path(__file__).resolve().parent / "build"
 
 
 def parse_colors(swift: str) -> dict:
@@ -29,9 +26,11 @@ def parse_colors(swift: str) -> dict:
     return {m[1]: [float(m[2]), float(m[3]), float(m[4])] for m in pat.finditer(swift)}
 
 
-def parse_type_colors(swift: str) -> dict:
-    """`case .fire: Color(red: …)` inside typeColor -> {fire: [r,g,b]}"""
-    body = swift.split("static func typeColor", 1)[1]
+def parse_case_colors(swift: str, func: str) -> dict:
+    """`case .name: Color(red: …)` inside a semantic color switch -> {name: [r,g,b]}"""
+    if f"static func {func}" not in swift:
+        return {}
+    body = swift.split(f"static func {func}", 1)[1]
     pat = re.compile(
         r"case \.(\w+):\s*Color\(red:\s*([\d.]+),\s*green:\s*([\d.]+),\s*blue:\s*([\d.]+)\)"
     )
@@ -46,50 +45,45 @@ def parse_scalar(swift: str, name: str) -> float:
 
 
 def main():
-    pixelkit = (APP / "PixelKit.swift").read_text()
-    typography = (APP / "Typography.swift").read_text()
+    if len(sys.argv) < 3:
+        sys.exit(__doc__.strip().splitlines()[-1])
+    app = Path(sys.argv[1])
+    profile = json.loads(Path(sys.argv[2]).read_text())
+    out = Path(sys.argv[3]) if len(sys.argv) > 3 else Path("tokens.json")
 
-    colors = parse_colors(pixelkit)
-    # The bg color is `Color.black`, not Color(red:...) — special-case it.
-    if "static let bg = Color.black" in pixelkit:
-        colors["bg"] = [0.0, 0.0, 0.0]
+    palette = (app / profile["paletteFile"]).read_text()
+    typography = (app / profile["typographyFile"]).read_text()
 
-    fonts = dict(re.findall(r'static let (jersey\d+|pixelBody)\s*=\s*"([\w-]+)"', typography))
+    colors = parse_colors(palette)
+    # Color statics written as `Color.black` / `Color.white` skip the regex.
+    for name, rgb in profile.get("literalColors", {}).items():
+        if f"static let {name} = Color." in palette:
+            colors[name] = rgb
+
+    fonts = dict(re.findall(profile["fontFilePattern"], typography))
 
     tokens = {
         "source": {
-            "palette": "AppSources/PixelKit.swift",
-            "typography": "AppSources/Typography.swift",
-            "screen": "docs/27_WATCH_SCREEN_DIMENSIONS.md (46mm row)",
+            "palette": f'{app.name}/{profile["paletteFile"]}',
+            "typography": f'{app.name}/{profile["typographyFile"]}',
+            "screen": profile.get("screenSource", ""),
         },
-        "screen": {"width": 208, "height": 248, "cornerRadius": 52, "device": "Apple Watch Series 11 46mm"},
+        "screen": profile["screen"],
         "colors": colors,
-        "typeColors": parse_type_colors(pixelkit),
-        "radius": parse_scalar(pixelkit, "radius"),
-        "radiusSmall": parse_scalar(pixelkit, "radiusSmall"),
-        # Typography.swift: bumped() legibility shift, then family by bumped size.
-        # a bundled pixel font is not installable in Figma; Typography.swift itself
-        # names Jersey 15 as the fallback for that band, so the export uses it.
+        "typeColors": parse_case_colors(palette, profile.get("caseColorFunc", "")),
         "fontFiles": fonts,
-        "fontBands": [
-            {"maxBumped": 12, "figmaFamily": "Jersey 10"},
-            {"maxBumped": 20, "figmaFamily": "Jersey 15", "note": "code uses a bundled pixel font; Jersey 15 is its declared fallback"},
-            {"maxBumped": 28, "figmaFamily": "Jersey 20"},
-            {"maxBumped": 9999, "figmaFamily": "Jersey 25"},
-        ],
-        "bumpRule": "size<11 -> 12; size<12 -> 13; size<28 -> size+2; else size",
-        "components": {
-            "pixelPanel": {"padding": 8, "fill": "panel", "outerStroke": {"color": "border", "weight": 2},
-                            "innerStroke": {"color": "borderDim", "weight": 1, "inset": 2}},
-            "pixelButton": {"minHeight": 40, "smallMinHeight": 24, "fontSize": 14, "smallFontSize": 12},
-            "pixelBar": {"height": 6, "segments": 10, "gap": 1.5, "segmentRadius": 1.5, "emptyFill": "panelDeep"},
-        },
+        # Size transform (legibility bump, dynamic type, …) applies BEFORE family
+        # selection; both live in the app's typography file, mirrored in profile.
+        "fontBands": profile["fontBands"],
+        "bumpRule": profile["bumpRule"],
+        "components": profile.get("components", {}),
     }
+    for name in profile.get("scalars", []):
+        tokens[name] = parse_scalar(palette, name)
 
-    OUT.mkdir(exist_ok=True)
-    out = OUT / "tokens.json"
+    out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(tokens, indent=2))
-    print(f"wrote {out} ({len(colors)} colors, {len(tokens['typeColors'])} type colors)")
+    print(f"wrote {out} ({len(colors)} colors, {len(tokens['typeColors'])} case colors)")
 
 
 if __name__ == "__main__":

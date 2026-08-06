@@ -2,11 +2,13 @@
 
 ## Tokens
 
-`extract_tokens.py <repo>` parses the design-system constants out of Swift
-source (Color(red:green:blue:) statics, radius scalars, semantic color
-switches, font family names) into `tokens.json`. The parse patterns are
-generic — each project supplies its own file map pointing at its
-design-system / typography files.
+`extract_tokens.py <app_src_dir> <profile.json> [out.json]` parses the
+design-system constants out of Swift source (Color(red:green:blue:) statics,
+radius scalars, semantic color switches, font family names) into `tokens.json`.
+The parse patterns are generic — each project supplies its own profile
+(`tokens.profile.example.json`) pointing at its design-system / typography
+files and declaring the font band table, screen, and component metrics a
+parser cannot infer.
 
 ## Font mapping caveat
 
