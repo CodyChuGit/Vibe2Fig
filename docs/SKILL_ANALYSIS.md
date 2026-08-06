@@ -1,8 +1,8 @@
 # Vibe2Fig — Skill Analysis: reproducing the pilot outcome
 
-*Written 2026-07-30, immediately after the pilot build (a watchOS SwiftUI
-app) reached its "portfolio-grade" state. This is the postmortem that turns a one-off great
-session into a repeatable skill.*
+*Written 2026-07-30, immediately after the pilot build (a watchOS SwiftUI app)
+reached its "portfolio-grade" state. This is the postmortem that turns a
+one-off great session into a repeatable skill.*
 
 ---
 
